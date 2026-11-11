@@ -174,7 +174,12 @@
           "Store 2": { price: 32.50, updated: "30 mins ago" }, 
           "Store 3": { price: 35.00, updated: "1 hour ago" } 
         }, 
-        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [31, 32, 33, 33.5, 34, 34.99], Store2: [30, 31, 31.5, 32, 32, 32.5] } 
+        history: { 
+          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
+          Store1: [31, 32, 33, 33.5, 34, 34.99], 
+          Store2: [30, 31, 31.5, 32, 32, 32.5],
+          Store3: [32, 33, 34, 34.5, 34.8, 35.00]
+        } 
       },
       { 
         id: 2, 
@@ -186,7 +191,12 @@
           "Store 2": { price: 17.99, updated: "3 hours ago" }, 
           "Store 3": { price: 15.99, updated: "45 mins ago" } 
         }, 
-        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [15, 15.5, 16, 16, 16.5, 16.5], Store2: [16, 17, 17.5, 17.5, 17.8, 17.99] } 
+        history: { 
+          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
+          Store1: [15, 15.5, 16, 16, 16.5, 16.5], 
+          Store2: [16, 17, 17.5, 17.5, 17.8, 17.99],
+          Store3: [14.5, 15, 15.2, 15.5, 15.8, 15.99]
+        } 
       },
       { 
         id: 3, 
@@ -198,7 +208,12 @@
           "Store 2": { price: 58.00, updated: "5 hours ago" }, 
           "Store 3": { price: 52.50, updated: "20 mins ago" } 
         }, 
-        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [50, 52, 53, 53.5, 54, 54.99], Store2: [52, 54, 56, 57, 57.5, 58] } 
+        history: { 
+          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
+          Store1: [50, 52, 53, 53.5, 54, 54.99], 
+          Store2: [52, 54, 56, 57, 57.5, 58],
+          Store3: [48, 49, 50, 51, 52, 52.50]
+        } 
       },
       { 
         id: 4, 
@@ -210,7 +225,12 @@
           "Store 2": { price: 34.99, updated: "10 mins ago" }, 
           "Store 3": { price: 36.50, updated: "2 hours ago" } 
         }, 
-        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [35, 36, 37, 37, 37.5, 38], Store2: [32, 33, 33.5, 34, 34.5, 34.99] } 
+        history: { 
+          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
+          Store1: [35, 36, 37, 37, 37.5, 38], 
+          Store2: [32, 33, 33.5, 34, 34.5, 34.99],
+          Store3: [33, 34, 35, 35.5, 36, 36.50]
+        } 
       },
       { 
         id: 5, 
@@ -222,7 +242,12 @@
           "Store 2": { price: 69.99, updated: "1 hour ago" }, 
           "Store 3": { price: 72.00, updated: "3 hours ago" } 
         }, 
-        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [68, 70, 71, 72, 73, 74.99], Store2: [65, 66, 67, 68, 69, 69.99] } 
+        history: { 
+          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
+          Store1: [68, 70, 71, 72, 73, 74.99], 
+          Store2: [65, 66, 67, 68, 69, 69.99],
+          Store3: [67, 68, 69, 70, 71, 72.00]
+        } 
       }
     ];
 
@@ -435,11 +460,12 @@
       document.getElementById("dispSavings").innerText = `R${savings.toFixed(2)}`;
     }
 
+    // Opens Chart modal displaying history lines for all 3 stores simultaneously
     function openChartModal(id) {
       const item = catalog.find(p => p.id === id);
       if (!item || !item.history) return;
 
-      document.getElementById("modalTitle").innerText = `${item.name} (${item.brand}) — Price Trend`;
+      document.getElementById("modalTitle").innerText = `${item.name} (${item.brand}) — 3-Store Price Trend`;
       document.getElementById("lastUpdatedTag").innerText = `Category: ${item.category}`;
       document.getElementById("chartModal").classList.add("active");
 
@@ -452,8 +478,9 @@
         data: {
           labels: item.history.labels,
           datasets: [
-            { label: 'Store 1', data: item.history.Store1, borderColor: '#0f2b48', tension: 0.2 },
-            { label: 'Store 2', data: item.history.Store2, borderColor: '#16a34a', tension: 0.2 }
+            { label: 'Store 1', data: item.history.Store1, borderColor: '#0f2b48', backgroundColor: '#0f2b48', tension: 0.2 },
+            { label: 'Store 2', data: item.history.Store2, borderColor: '#16a34a', backgroundColor: '#16a34a', tension: 0.2 },
+            { label: 'Store 3', data: item.history.Store3, borderColor: '#7c3aed', backgroundColor: '#7c3aed', tension: 0.2 }
           ]
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
