@@ -16,6 +16,9 @@
       --border: #e2e8f0;
       --accent-green: #16a34a;
       --purple: #7c3aed;
+      --alert-bg: #fef2f2;
+      --alert-border: #fca5a5;
+      --alert-text: #991b1b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
@@ -24,6 +27,10 @@
     header { background: var(--navy); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
     header h1 { font-size: 1.5rem; }
     header p { color: #94a3b8; font-size: 0.85rem; }
+
+    /* Alert Notification Banner */
+    .alert-banner { display: none; background: var(--alert-bg); border: 1px solid var(--alert-border); color: var(--alert-text); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 500; align-items: center; gap: 0.5rem; }
+    .alert-banner.active { display: flex; }
 
     .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .dash-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
@@ -55,6 +62,7 @@
     .actions { display: flex; gap: 0.4rem; align-items: center; }
     .btn-add { background: var(--accent-green); font-size: 0.8rem; padding: 0.3rem 0.6rem; }
     .btn-chart { background: #64748b; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
+    .btn-alert { background: #d97706; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
 
     .basket-items { margin-bottom: 1rem; min-height: 80px; display: flex; flex-direction: column; gap: 0.5rem; }
     .basket-row { display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.5rem 0.75rem; border-radius: 6px; }
@@ -80,7 +88,7 @@
 
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
     .modal-overlay.active { display: flex; }
-    .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 600px; position: relative; }
+    .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
     .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
   </style>
 </head>
@@ -96,6 +104,11 @@
       <div style="font-size: 1.1rem; font-weight: bold;">R <input type="number" id="targetBudgetInput" value="3000" style="width: 80px; padding: 0.2rem; font-size: 0.9rem;" onchange="updateDashboardTotals()"></div>
     </div>
   </header>
+
+  <!-- Dynamic Price-Drop Alert Banner -->
+  <div class="alert-banner" id="alertBanner">
+    🔔 <strong>Target Reached!</strong> <span id="alertMessage"></span>
+  </div>
 
   <div class="dashboard-cards">
     <div class="dash-card">
@@ -153,106 +166,69 @@
     </div>
   </div>
 
+  <!-- Chart Modal -->
   <div class="modal-overlay" id="chartModal">
     <div class="modal-content">
-      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <span class="modal-close" onclick="closeChartModal()">&times;</span>
       <h3 id="modalTitle" style="margin-bottom: 0.5rem;">Price History</h3>
       <p id="lastUpdatedTag" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
       <canvas id="priceHistoryChart"></canvas>
     </div>
   </div>
 
+  <!-- Price Alert Setup Modal -->
+  <div class="modal-overlay" id="alertModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeAlertModal()">&times;</span>
+      <h3 id="alertModalTitle" style="margin-bottom: 0.5rem; color: var(--navy);">Set Price-Drop Alert</h3>
+      <p id="alertModalSub" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 0.25rem;">Target Price Threshold (R):</label>
+        <input type="number" id="targetPriceInput" placeholder="e.g. 32.00" style="width: 100%; padding: 0.5rem; font-size: 1rem;" />
+      </div>
+
+      <button onclick="savePriceAlert()" style="width: 100%; padding: 0.6rem;">Save Target Alert</button>
+    </div>
+  </div>
+
   <script>
     let catalog = [
       { 
-        id: 1, 
-        name: "Full Cream Milk (2L)", 
-        brand: "Brand A",
-        category: "Dairy & Eggs", 
-        prices: { 
-          "Store 1": { price: 34.99, updated: "2 hours ago" }, 
-          "Store 2": { price: 32.50, updated: "30 mins ago" }, 
-          "Store 3": { price: 35.00, updated: "1 hour ago" } 
-        }, 
-        history: { 
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
-          Store1: [31, 32, 33, 33.5, 34, 34.99], 
-          Store2: [30, 31, 31.5, 32, 32, 32.5],
-          Store3: [32, 33, 34, 34.5, 34.8, 35.00]
-        } 
+        id: 1, name: "Full Cream Milk (2L)", brand: "Brand A", category: "Dairy & Eggs", 
+        targetAlert: null,
+        prices: { "Store 1": { price: 34.99, updated: "2 hours ago" }, "Store 2": { price: 32.50, updated: "30 mins ago" }, "Store 3": { price: 35.00, updated: "1 hour ago" } }, 
+        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [31, 32, 33, 33.5, 34, 34.99], Store2: [30, 31, 31.5, 32, 32, 32.5], Store3: [32, 33, 34, 34.5, 34.8, 35.00] } 
       },
       { 
-        id: 2, 
-        name: "White Bread (700g)", 
-        brand: "Brand B",
-        category: "Bakery", 
-        prices: { 
-          "Store 1": { price: 16.50, updated: "15 mins ago" }, 
-          "Store 2": { price: 17.99, updated: "3 hours ago" }, 
-          "Store 3": { price: 15.99, updated: "45 mins ago" } 
-        }, 
-        history: { 
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
-          Store1: [15, 15.5, 16, 16, 16.5, 16.5], 
-          Store2: [16, 17, 17.5, 17.5, 17.8, 17.99],
-          Store3: [14.5, 15, 15.2, 15.5, 15.8, 15.99]
-        } 
+        id: 2, name: "White Bread (700g)", brand: "Brand B", category: "Bakery", 
+        targetAlert: null,
+        prices: { "Store 1": { price: 16.50, updated: "15 mins ago" }, "Store 2": { price: 17.99, updated: "3 hours ago" }, "Store 3": { price: 15.99, updated: "45 mins ago" } }, 
+        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [15, 15.5, 16, 16, 16.5, 16.5], Store2: [16, 17, 17.5, 17.5, 17.8, 17.99], Store3: [14.5, 15, 15.2, 15.5, 15.8, 15.99] } 
       },
       { 
-        id: 3, 
-        name: "Large Eggs (18 Pack)", 
-        brand: "Brand C",
-        category: "Dairy & Eggs", 
-        prices: { 
-          "Store 1": { price: 54.99, updated: "1 hour ago" }, 
-          "Store 2": { price: 58.00, updated: "5 hours ago" }, 
-          "Store 3": { price: 52.50, updated: "20 mins ago" } 
-        }, 
-        history: { 
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
-          Store1: [50, 52, 53, 53.5, 54, 54.99], 
-          Store2: [52, 54, 56, 57, 57.5, 58],
-          Store3: [48, 49, 50, 51, 52, 52.50]
-        } 
+        id: 3, name: "Large Eggs (18 Pack)", brand: "Brand C", category: "Dairy & Eggs", 
+        targetAlert: null,
+        prices: { "Store 1": { price: 54.99, updated: "1 hour ago" }, "Store 2": { price: 58.00, updated: "5 hours ago" }, "Store 3": { price: 52.50, updated: "20 mins ago" } }, 
+        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [50, 52, 53, 53.5, 54, 54.99], Store2: [52, 54, 56, 57, 57.5, 58], Store3: [48, 49, 50, 51, 52, 52.50] } 
       },
       { 
-        id: 4, 
-        name: "Maize Meal (2kg)", 
-        brand: "Brand D",
-        category: "Staple Foods", 
-        prices: { 
-          "Store 1": { price: 38.00, updated: "4 hours ago" }, 
-          "Store 2": { price: 34.99, updated: "10 mins ago" }, 
-          "Store 3": { price: 36.50, updated: "2 hours ago" } 
-        }, 
-        history: { 
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
-          Store1: [35, 36, 37, 37, 37.5, 38], 
-          Store2: [32, 33, 33.5, 34, 34.5, 34.99],
-          Store3: [33, 34, 35, 35.5, 36, 36.50]
-        } 
+        id: 4, name: "Maize Meal (2kg)", brand: "Brand D", category: "Staple Foods", 
+        targetAlert: null,
+        prices: { "Store 1": { price: 38.00, updated: "4 hours ago" }, "Store 2": { price: 34.99, updated: "10 mins ago" }, "Store 3": { price: 36.50, updated: "2 hours ago" } }, 
+        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [35, 36, 37, 37, 37.5, 38], Store2: [32, 33, 33.5, 34, 34.5, 34.99], Store3: [33, 34, 35, 35.5, 36, 36.50] } 
       },
       { 
-        id: 5, 
-        name: "Sunflower Oil (2L)", 
-        brand: "Brand E",
-        category: "Staple Foods", 
-        prices: { 
-          "Store 1": { price: 74.99, updated: "Just now" }, 
-          "Store 2": { price: 69.99, updated: "1 hour ago" }, 
-          "Store 3": { price: 72.00, updated: "3 hours ago" } 
-        }, 
-        history: { 
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], 
-          Store1: [68, 70, 71, 72, 73, 74.99], 
-          Store2: [65, 66, 67, 68, 69, 69.99],
-          Store3: [67, 68, 69, 70, 71, 72.00]
-        } 
+        id: 5, name: "Sunflower Oil (2L)", brand: "Brand E", category: "Staple Foods", 
+        targetAlert: null,
+        prices: { "Store 1": { price: 74.99, updated: "Just now" }, "Store 2": { price: 69.99, updated: "1 hour ago" }, "Store 3": { price: 72.00, updated: "3 hours ago" } }, 
+        history: { labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], Store1: [68, 70, 71, 72, 73, 74.99], Store2: [65, 66, 67, 68, 69, 69.99], Store3: [67, 68, 69, 70, 71, 72.00] } 
       }
     ];
 
     let userBasket = [];
     let chartInstance = null;
+    let activeAlertProductId = null;
 
     function renderProducts(items = catalog) {
       const listEl = document.getElementById("productList");
@@ -272,11 +248,12 @@
         li.innerHTML = `
           <div class="item-header">
             <div>
-              <span class="brand-badge">${item.brand}</span>
+              <span class="brand-badge">${item.brand}</span> ${item.targetAlert ? `<span style="font-size:0.7rem; color:#d97706; font-weight:bold;">🔔 Alert set: R${item.targetAlert}</span>` : ''}
               <br/><strong>${item.name}</strong>
               <br/><small style="color:var(--text-muted);">${item.category}</small>
             </div>
             <div class="actions">
+              <button class="btn-alert" onclick="openAlertModal(${item.id})">🔔 Alert</button>
               <button class="btn-chart" onclick="openChartModal(${item.id})">📈 Chart</button>
               <button class="btn-add" onclick="addToBasket(${item.id})">+ Add</button>
             </div>
@@ -292,6 +269,66 @@
         `;
         listEl.appendChild(li);
       });
+
+      checkActiveAlerts();
+    }
+
+    // Check if any store price has dropped to or below the user's target alert threshold
+    function checkActiveAlerts() {
+      let triggeredAlerts = [];
+
+      catalog.forEach(item => {
+        if (item.targetAlert !== null) {
+          for (const [store, data] of Object.entries(item.prices)) {
+            if (data.price <= item.targetAlert) {
+              triggeredAlerts.push(`${item.name} (${item.brand}) is now R${data.price.toFixed(2)} at ${store} (Target was R${item.targetAlert})`);
+              break;
+            }
+          }
+        }
+      });
+
+      const banner = document.getElementById("alertBanner");
+      const messageSpan = document.getElementById("alertMessage");
+
+      if (triggeredAlerts.length > 0) {
+        messageSpan.innerText = triggeredAlerts.join(" | ");
+        banner.classList.add("active");
+      } else {
+        banner.classList.remove("active");
+      }
+    }
+
+    function openAlertModal(id) {
+      const item = catalog.find(p => p.id === id);
+      if (!item) return;
+
+      activeAlertProductId = id;
+      document.getElementById("alertModalTitle").innerText = `Set Alert for ${item.name}`;
+      document.getElementById("alertModalSub").innerText = `Brand: ${item.brand} | Lowest current price is R${Math.min(...Object.values(item.prices).map(p => p.price)).toFixed(2)}`;
+      document.getElementById("targetPriceInput").value = item.targetAlert || '';
+      document.getElementById("alertModal").classList.add("active");
+    }
+
+    function closeAlertModal() {
+      document.getElementById("alertModal").classList.remove("active");
+      activeAlertProductId = null;
+    }
+
+    function savePriceAlert() {
+      const val = parseFloat(document.getElementById("targetPriceInput").value);
+      if (isNaN(val) || val <= 0) {
+        alert("Please enter a valid target price.");
+        return;
+      }
+
+      const item = catalog.find(p => p.id === activeAlertProductId);
+      if (item) {
+        item.targetAlert = val;
+      }
+
+      closeAlertModal();
+      renderProducts();
     }
 
     function filterProducts() {
@@ -460,7 +497,6 @@
       document.getElementById("dispSavings").innerText = `R${savings.toFixed(2)}`;
     }
 
-    // Opens Chart modal displaying history lines for all 3 stores simultaneously
     function openChartModal(id) {
       const item = catalog.find(p => p.id === id);
       if (!item || !item.history) return;
@@ -487,7 +523,7 @@
       });
     }
 
-    function closeModal() {
+    function closeChartModal() {
       document.getElementById("chartModal").classList.remove("active");
     }
 
