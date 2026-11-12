@@ -19,7 +19,7 @@ Real-Time Budget Dashboard:** Monitors monthly budgets, spent amounts, remaining
 Data Freshness Indicators:** Displays timestamps for when individual store prices were last verified[cite: 1]. 
 Button & Modal: Added an alert button next to each product in the catalog. Clicking it opens a quick prompt modal where users can type their target threshold price (e.g., R32.00).
 
-
+Host:https://bongani112-pricewise-sa.vercel.app/
 
 Tech Stack
 
