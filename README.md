@@ -16,7 +16,8 @@ Multi-Store Optimized:* The absolute lowest cost achieved by splitting items acr
 Budget Option:* Tracks whether your basket stays within your user-defined monthly limit[cite: 1].
 3-Store Price History Trends:** Interactive Chart.js modals that plot multi-month historical price movements simultaneously across all three stores[cite: 1].
 Real-Time Budget Dashboard:** Monitors monthly budgets, spent amounts, remaining funds, and estimated multi-store savings dynamically as quantities change[cite: 1].
-Data Freshness Indicators:** Displays timestamps for when individual store prices were last verified[cite: 1].
+Data Freshness Indicators:** Displays timestamps for when individual store prices were last verified[cite: 1]. 
+Button & Modal: Added an alert button next to each product in the catalog. Clicking it opens a quick prompt modal where users can type their target threshold price (e.g., R32.00).
 
 
 
