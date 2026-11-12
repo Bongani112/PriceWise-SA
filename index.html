@@ -75,6 +75,12 @@
     button { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.15s; }
     button:hover { opacity: 0.92; }
 
+    /* Action Buttons Group */
+    .basket-actions { display: flex; gap: 0.6rem; }
+    .btn-run { flex: 2; padding: 0.8rem; font-size: 0.95rem; }
+    .btn-reset { flex: 1; background: #e2e8f0; color: #334155; padding: 0.8rem; font-size: 0.95rem; }
+    .btn-reset:hover { background: #cbd5e1; opacity: 1; }
+
     /* Optimizer Settings Control */
     .optimizer-controls { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
     .optimizer-controls label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: flex; justify-content: space-between; align-items: center; }
@@ -151,6 +157,7 @@
       .actions button { text-align: center; padding: 0.5rem 0.25rem; font-size: 0.78rem; }
       .store-prices { grid-template-columns: 1fr; }
       .price-tag { flex-direction: row; justify-content: space-between; align-items: center; }
+      .basket-actions { flex-direction: column; }
       .opt-cards-grid { grid-template-columns: 1fr; gap: 0.6rem; }
     }
   </style>
@@ -216,6 +223,7 @@
     <div>
       <div class="card">
         <h2>2. Shopping List Management</h2>
+        
         <div class="basket-items" id="basketContainer">
           <p style="color: var(--text-muted); font-size: 0.9rem;">No items added yet.</p>
         </div>
@@ -233,7 +241,10 @@
           </div>
         </div>
 
-        <button onclick="runOptimizer()" style="width: 100%; padding: 0.8rem; font-size: 0.95rem;">⚡ Run Smart Basket Optimiser</button>
+        <div class="basket-actions">
+          <button class="btn-run" onclick="runOptimizer()">⚡ Run Smart Basket Optimiser</button>
+          <button class="btn-reset" onclick="resetSession()">🔄 Refresh / Reset</button>
+        </div>
       </div>
 
       <div class="card" style="margin-top: 1.5rem;">
@@ -308,6 +319,8 @@
     let userBasket = [];
     let chartInstance = null;
     let activeAlertProductId = null;
+    let lastSpent = 0;
+    let lastSavings = 0;
 
     function renderProducts(items = catalog) {
       const listEl = document.getElementById("productList");
@@ -464,7 +477,18 @@
       `).join("");
     }
 
-    // Practical-Cost Optimizer Implementation
+    function resetSession() {
+      userBasket = [];
+      document.getElementById("searchInput").value = "";
+      document.getElementById("categorySelect").value = "";
+      document.getElementById("resultsContainer").innerHTML = `
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Add products and click Optimiser to view practical store comparisons.</p>
+      `;
+      renderProducts(catalog);
+      renderBasket();
+      updateDashboardTotals(0, 0);
+    }
+
     function runOptimizer() {
       const resultsContainer = document.getElementById("resultsContainer");
       if (userBasket.length === 0) {
@@ -498,7 +522,6 @@
         splitBreakdown.push({ name: item.name, brand: item.brand, qty, store: lowestStore, total: lowestPrice * qty });
       });
 
-      // Practical Multi-Store Calculation: Extra stores visited beyond the primary/first store incur travel fees
       const extraStoresCount = Math.max(0, storesVisitedSet.size - 1);
       const totalTravelFee = extraStoresCount * travelFeePerExtraStore;
       const practicalMultiStoreTotal = pureSplitProductsTotal + totalTravelFee;
@@ -588,14 +611,17 @@
       `;
     }
 
-    function updateDashboardTotals(basketTotal = 0, savings = 0) {
+    function updateDashboardTotals(basketTotal = lastSpent, savings = lastSavings) {
+      lastSpent = basketTotal;
+      lastSavings = savings;
+
       const budget = parseFloat(document.getElementById("targetBudgetInput").value) || 3000;
       const remaining = budget - basketTotal;
 
       document.getElementById("dispBudget").innerText = `R${budget.toFixed(2)}`;
       document.getElementById("dispSpent").innerText = `R${basketTotal.toFixed(2)}`;
       document.getElementById("dispRemaining").innerText = `R${remaining.toFixed(2)}`;
-      document.getElementById("dispSavings").innerText = `R${savings.toFixed(2)}`;
+      document.getElementById("dispSavings").innerText = `R${Math.max(0, savings).toFixed(2)}`;
     }
 
     function openChartModal(id) {
