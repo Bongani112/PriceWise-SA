@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PriceWise SA — Full Prototype</title>
+  <title>PriceWise SA — Mobile & Desktop Prototype</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -24,72 +24,144 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 1.5rem; }
     
-    header { background: var(--navy); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    header { 
+      background: var(--navy); 
+      color: white; 
+      padding: 1rem 1.5rem; 
+      border-radius: 8px; 
+      margin-bottom: 1.5rem; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      gap: 1rem;
+    }
     header h1 { font-size: 1.5rem; }
     header p { color: #94a3b8; font-size: 0.85rem; }
+    .budget-box { text-align: right; }
 
     /* Alert Notification Banner */
-    .alert-banner { display: none; background: var(--alert-bg); border: 1px solid var(--alert-border); color: var(--alert-text); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 500; align-items: center; gap: 0.5rem; }
+    .alert-banner { 
+      display: none; 
+      background: var(--alert-bg); 
+      border: 1px solid var(--alert-border); 
+      color: var(--alert-text); 
+      padding: 0.75rem 1rem; 
+      border-radius: 6px; 
+      margin-bottom: 1.5rem; 
+      font-size: 0.9rem; 
+      font-weight: 500; 
+      align-items: center; 
+      gap: 0.5rem; 
+      flex-wrap: wrap;
+    }
     .alert-banner.active { display: flex; }
 
+    /* Dashboard Summary Cards */
     .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .dash-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
     .dash-card small { color: var(--text-muted); font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-    .dash-card .amount { font-size: 1.5rem; font-weight: bold; margin-top: 0.25rem; }
+    .dash-card .amount { font-size: 1.4rem; font-weight: bold; margin-top: 0.25rem; word-break: break-word; }
 
+    /* Main Grid Layout */
     .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; }
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .card h2 { font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: var(--navy); }
 
+    /* Search Box */
     .search-box { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-    input[type="text"], input[type="number"], select { padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; outline: none; }
+    input[type="text"], input[type="number"], select { padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 0.9rem; }
     input[type="text"] { flex: 1; }
-    select { background: #fff; color: var(--text); font-size: 0.85rem; cursor: pointer; }
-    button { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
-    button:hover { opacity: 0.95; }
+    select { background: #fff; color: var(--text); cursor: pointer; }
+    button { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.15s; }
+    button:hover { opacity: 0.92; }
 
+    /* Product Catalogue List */
     .item-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
-    .item-row { padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
-    .item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+    .item-row { padding: 0.85rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+    .item-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; }
     
     .brand-badge { background: #e2e8f0; color: #334155; font-size: 0.7rem; font-weight: bold; padding: 0.15rem 0.4rem; border-radius: 4px; display: inline-block; margin-bottom: 0.25rem; }
 
-    .store-prices { display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.75rem; margin-top: 0.5rem; }
-    .price-tag { background: #f1f5f9; padding: 0.35rem 0.55rem; border-radius: 4px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.1rem; }
+    .store-prices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; font-size: 0.75rem; margin-top: 0.5rem; }
+    .price-tag { background: #f1f5f9; padding: 0.4rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.15rem; }
     .price-tag.lowest { background: #dcfce7; border-color: #86efac; color: #15803d; font-weight: bold; }
     .freshness { font-size: 0.65rem; color: var(--text-muted); font-weight: normal; }
 
-    .actions { display: flex; gap: 0.4rem; align-items: center; }
-    .btn-add { background: var(--accent-green); font-size: 0.8rem; padding: 0.3rem 0.6rem; }
-    .btn-chart { background: #64748b; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
-    .btn-alert { background: #d97706; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
+    .actions { display: flex; gap: 0.35rem; align-items: center; flex-shrink: 0; }
+    .btn-add { background: var(--accent-green); font-size: 0.8rem; padding: 0.4rem 0.65rem; }
+    .btn-chart { background: #64748b; font-size: 0.8rem; padding: 0.4rem 0.65rem; }
+    .btn-alert { background: #d97706; font-size: 0.8rem; padding: 0.4rem 0.65rem; }
 
+    /* Basket Management */
     .basket-items { margin-bottom: 1rem; min-height: 80px; display: flex; flex-direction: column; gap: 0.5rem; }
-    .basket-row { display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.5rem 0.75rem; border-radius: 6px; }
-    .qty-controls { display: flex; align-items: center; gap: 0.5rem; }
-    .qty-btn { background: #dbeafe; color: var(--primary); width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
+    .basket-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.6rem 0.75rem; border-radius: 6px; }
+    .qty-controls { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+    .qty-btn { background: #dbeafe; color: var(--primary); width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; user-select: none; }
 
+    /* Optimizer Results */
     .opt-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; }
     .opt-card { border: 2px solid var(--border); border-radius: 8px; padding: 0.85rem; background: #fff; }
     .opt-card.single { border-color: var(--primary); }
     .opt-card.multi { border-color: var(--accent-green); background: #f0fdf4; }
     .opt-card.budget { border-color: var(--purple); }
-    .opt-card .badge { display: block; font-size: 0.65rem; font-weight: bold; border-radius: 4px; padding: 0.2rem 0.4rem; color: white; text-align: center; margin-bottom: 0.4rem; }
+    .opt-card .badge { display: block; font-size: 0.65rem; font-weight: bold; border-radius: 4px; padding: 0.25rem 0.4rem; color: white; text-align: center; margin-bottom: 0.4rem; }
     .opt-card.single .badge { background: var(--primary); }
     .opt-card.multi .badge { background: var(--accent-green); }
     .opt-card.budget .badge { background: var(--purple); }
     .opt-card .price { font-size: 1.25rem; font-weight: bold; margin: 0.25rem 0; }
     .opt-card p { font-size: 0.75rem; color: var(--text-muted); }
 
-    .comparison-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
-    .comparison-table th, .comparison-table td { padding: 0.5rem; border: 1px solid var(--border); text-align: left; }
+    /* Responsive Table Wrapper */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 0.5rem; }
+    .comparison-table { width: 100%; min-width: 340px; border-collapse: collapse; font-size: 0.85rem; }
+    .comparison-table th, .comparison-table td { padding: 0.55rem; border: 1px solid var(--border); text-align: left; }
     .comparison-table th { background: #f8fafc; color: var(--navy); }
     .comparison-table .best-price { background: #dcfce7; font-weight: bold; color: #16a34a; }
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 100; padding: 1rem; }
     .modal-overlay.active { display: flex; }
-    .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
-    .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+    .modal-content { background: white; padding: 1.25rem; border-radius: 8px; width: 100%; max-width: 550px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.6rem; cursor: pointer; color: var(--text-muted); line-height: 1; }
+
+    /* =========================================
+       TABLET BREAKPOINT (<= 992px)
+       ========================================= */
+    @media (max-width: 992px) {
+      body { padding: 1rem; }
+      .dashboard-cards { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* =========================================
+       MOBILE PHONE BREAKPOINT (<= 600px)
+       ========================================= */
+    @media (max-width: 600px) {
+      body { padding: 0.75rem; }
+      
+      header { flex-direction: column; align-items: flex-start; padding: 1rem; }
+      header h1 { font-size: 1.3rem; }
+      .budget-box { text-align: left; width: 100%; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 0.6rem; }
+
+      .dashboard-cards { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+      .dash-card { padding: 0.75rem; }
+      .dash-card .amount { font-size: 1.15rem; }
+
+      .card { padding: 1rem; }
+
+      .search-box { flex-direction: column; }
+      .search-box input[type="text"], .search-box select { width: 100%; }
+
+      .item-header { flex-direction: column; gap: 0.6rem; }
+      .actions { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
+      .actions button { text-align: center; padding: 0.5rem 0.25rem; font-size: 0.78rem; }
+
+      .store-prices { grid-template-columns: 1fr; }
+      .price-tag { flex-direction: row; justify-content: space-between; align-items: center; }
+
+      .opt-cards-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+      .opt-card { display: flex; flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -99,15 +171,17 @@
       <h1>PRICEWISE SA</h1>
       <p>Essential Goods Price Comparison & Smart Basket Optimiser</p>
     </div>
-    <div style="text-align: right;">
-      <small style="color: #cbd5e1;">Target Monthly Budget</small>
-      <div style="font-size: 1.1rem; font-weight: bold;">R <input type="number" id="targetBudgetInput" value="3000" style="width: 80px; padding: 0.2rem; font-size: 0.9rem;" onchange="updateDashboardTotals()"></div>
+    <div class="budget-box">
+      <small style="color: #cbd5e1; display: block;">Target Monthly Budget</small>
+      <div style="font-size: 1.1rem; font-weight: bold;">
+        R <input type="number" id="targetBudgetInput" value="3000" style="width: 85px; padding: 0.25rem; font-size: 0.95rem;" onchange="updateDashboardTotals()">
+      </div>
     </div>
   </header>
 
   <!-- Dynamic Price-Drop Alert Banner -->
   <div class="alert-banner" id="alertBanner">
-    🔔 <strong>Target Reached!</strong> <span id="alertMessage"></span>
+    <span>🔔 <strong>Target Reached!</strong> <span id="alertMessage"></span></span>
   </div>
 
   <div class="dashboard-cards">
@@ -154,7 +228,7 @@
         <div class="basket-items" id="basketContainer">
           <p style="color: var(--text-muted); font-size: 0.9rem;">No items added yet.</p>
         </div>
-        <button onclick="runOptimizer()" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">⚡ Run Smart Basket Optimiser</button>
+        <button onclick="runOptimizer()" style="width: 100%; padding: 0.8rem; font-size: 0.95rem;">⚡ Run Smart Basket Optimiser</button>
       </div>
 
       <div class="card" style="margin-top: 1.5rem;">
@@ -170,7 +244,7 @@
   <div class="modal-overlay" id="chartModal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeChartModal()">&times;</span>
-      <h3 id="modalTitle" style="margin-bottom: 0.5rem;">Price History</h3>
+      <h3 id="modalTitle" style="margin-bottom: 0.35rem; padding-right: 1.5rem;">Price History</h3>
       <p id="lastUpdatedTag" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
       <canvas id="priceHistoryChart"></canvas>
     </div>
@@ -180,15 +254,15 @@
   <div class="modal-overlay" id="alertModal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeAlertModal()">&times;</span>
-      <h3 id="alertModalTitle" style="margin-bottom: 0.5rem; color: var(--navy);">Set Price-Drop Alert</h3>
+      <h3 id="alertModalTitle" style="margin-bottom: 0.35rem; color: var(--navy); padding-right: 1.5rem;">Set Price-Drop Alert</h3>
       <p id="alertModalSub" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
       
       <div style="margin-bottom: 1rem;">
-        <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 0.25rem;">Target Price Threshold (R):</label>
-        <input type="number" id="targetPriceInput" placeholder="e.g. 32.00" style="width: 100%; padding: 0.5rem; font-size: 1rem;" />
+        <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 0.35rem;">Target Price Threshold (R):</label>
+        <input type="number" id="targetPriceInput" placeholder="e.g. 32.00" style="width: 100%; padding: 0.6rem; font-size: 1rem;" />
       </div>
 
-      <button onclick="savePriceAlert()" style="width: 100%; padding: 0.6rem;">Save Target Alert</button>
+      <button onclick="savePriceAlert()" style="width: 100%; padding: 0.7rem; font-size: 0.95rem;">Save Target Alert</button>
     </div>
   </div>
 
@@ -248,7 +322,7 @@
         li.innerHTML = `
           <div class="item-header">
             <div>
-              <span class="brand-badge">${item.brand}</span> ${item.targetAlert ? `<span style="font-size:0.7rem; color:#d97706; font-weight:bold;">🔔 Alert set: R${item.targetAlert}</span>` : ''}
+              <span class="brand-badge">${item.brand}</span> ${item.targetAlert ? `<span style="font-size:0.7rem; color:#d97706; font-weight:bold;">🔔 Alert: R${item.targetAlert}</span>` : ''}
               <br/><strong>${item.name}</strong>
               <br/><small style="color:var(--text-muted);">${item.category}</small>
             </div>
@@ -273,7 +347,6 @@
       checkActiveAlerts();
     }
 
-    // Check if any store price has dropped to or below the user's target alert threshold
     function checkActiveAlerts() {
       let triggeredAlerts = [];
 
@@ -281,7 +354,7 @@
         if (item.targetAlert !== null) {
           for (const [store, data] of Object.entries(item.prices)) {
             if (data.price <= item.targetAlert) {
-              triggeredAlerts.push(`${item.name} (${item.brand}) is now R${data.price.toFixed(2)} at ${store} (Target was R${item.targetAlert})`);
+              triggeredAlerts.push(`${item.name} (${item.brand}) is now R${data.price.toFixed(2)} at ${store} (Target: R${item.targetAlert})`);
               break;
             }
           }
@@ -444,46 +517,50 @@
         </div>
 
         <h3 style="margin-top: 1.25rem; font-size: 0.95rem; color: var(--navy);">Total Basket Comparison per Store</h3>
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Store</th>
-              <th>Total Cost</th>
-              <th>Difference vs Best</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sortedStores.map(([store, total], index) => `
-              <tr class="${index === 0 ? 'best-price' : ''}">
-                <td>${store} ${index === 0 ? '🏆 (Cheapest Single Store)' : ''}</td>
-                <td>R${total.toFixed(2)}</td>
-                <td>${index === 0 ? 'Baseline' : `+R${(total - bestSingleStore[1]).toFixed(2)}`}</td>
+        <div class="table-responsive">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Store</th>
+                <th>Total Cost</th>
+                <th>Difference vs Best</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${sortedStores.map(([store, total], index) => `
+                <tr class="${index === 0 ? 'best-price' : ''}">
+                  <td>${store} ${index === 0 ? '🏆 (Cheapest Single Store)' : ''}</td>
+                  <td>R${total.toFixed(2)}</td>
+                  <td>${index === 0 ? 'Baseline' : `+R${(total - bestSingleStore[1]).toFixed(2)}`}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
 
         <h3 style="margin-top: 1.25rem; font-size: 0.95rem; color: var(--navy);">Multi-Store Split Recommendation</h3>
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Cheapest Store</th>
-              <th>Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${splitBreakdown.map(item => `
+        <div class="table-responsive">
+          <table class="comparison-table">
+            <thead>
               <tr>
-                <td>${item.name} (${item.brand})</td>
-                <td>${item.qty}</td>
-                <td class="best-price">${item.store}</td>
-                <td>R${item.total.toFixed(2)}</td>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Cheapest Store</th>
+                <th>Subtotal</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${splitBreakdown.map(item => `
+                <tr>
+                  <td>${item.name} (${item.brand})</td>
+                  <td>${item.qty}</td>
+                  <td class="best-price">${item.store}</td>
+                  <td>R${item.total.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       `;
     }
 
