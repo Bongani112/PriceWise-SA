@@ -18,6 +18,9 @@ Budget Option:* Tracks whether your basket stays within your user-defined monthl
 Real-Time Budget Dashboard:** Monitors monthly budgets, spent amounts, remaining funds, and estimated multi-store savings dynamically as quantities change[cite: 1].
 Data Freshness Indicators:** Displays timestamps for when individual store prices were last verified[cite: 1]. 
 Button & Modal: Added an alert button next to each product in the catalog. Clicking it opens a quick prompt modal where users can type their target threshold price (e.g., R32.00).
+Travel Fee Input Field: A clean input box inside the Optimiser section where users can specify an estimated extra-store travel/delivery fee (e.g., R30.00).
+Practical-Cost Algorithm Adjustment: The optimizer will check how many distinct extra stores are visited in the multi-store split, multiply the fee by the number of extra stores, and add it to the multi-store total.
+Smart Recommendation Update: If the travel fee wipes out the product savings, the UI will explicitly advise sticking to the Single-Store Best option.
 
 Host:https://bongani112-pricewise-sa.vercel.app/
 
