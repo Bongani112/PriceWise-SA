@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PriceWise SA — Mobile & Desktop Prototype</title>
+  <title>PriceWise SA — Full Prototype</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -75,6 +75,10 @@
     button { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.15s; }
     button:hover { opacity: 0.92; }
 
+    /* Optimizer Settings Control */
+    .optimizer-controls { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .optimizer-controls label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: flex; justify-content: space-between; align-items: center; }
+
     /* Product Catalogue List */
     .item-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
     .item-row { padding: 0.85rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
@@ -124,43 +128,30 @@
     .modal-content { background: white; padding: 1.25rem; border-radius: 8px; width: 100%; max-width: 550px; position: relative; max-height: 90vh; overflow-y: auto; }
     .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.6rem; cursor: pointer; color: var(--text-muted); line-height: 1; }
 
-    /* =========================================
-       TABLET BREAKPOINT (<= 992px)
-       ========================================= */
+    /* Tablet and Mobile Breakpoints */
     @media (max-width: 992px) {
       body { padding: 1rem; }
       .dashboard-cards { grid-template-columns: repeat(2, 1fr); }
       .grid { grid-template-columns: 1fr; }
     }
 
-    /* =========================================
-       MOBILE PHONE BREAKPOINT (<= 600px)
-       ========================================= */
     @media (max-width: 600px) {
       body { padding: 0.75rem; }
-      
       header { flex-direction: column; align-items: flex-start; padding: 1rem; }
       header h1 { font-size: 1.3rem; }
       .budget-box { text-align: left; width: 100%; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 0.6rem; }
-
       .dashboard-cards { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
       .dash-card { padding: 0.75rem; }
       .dash-card .amount { font-size: 1.15rem; }
-
       .card { padding: 1rem; }
-
       .search-box { flex-direction: column; }
       .search-box input[type="text"], .search-box select { width: 100%; }
-
       .item-header { flex-direction: column; gap: 0.6rem; }
       .actions { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
       .actions button { text-align: center; padding: 0.5rem 0.25rem; font-size: 0.78rem; }
-
       .store-prices { grid-template-columns: 1fr; }
       .price-tag { flex-direction: row; justify-content: space-between; align-items: center; }
-
       .opt-cards-grid { grid-template-columns: 1fr; gap: 0.6rem; }
-      .opt-card { display: flex; flex-direction: column; }
     }
   </style>
 </head>
@@ -228,13 +219,27 @@
         <div class="basket-items" id="basketContainer">
           <p style="color: var(--text-muted); font-size: 0.9rem;">No items added yet.</p>
         </div>
+        
+        <!-- Practical Cost Control (Travel/Delivery Fee Toggle) -->
+        <div class="optimizer-controls">
+          <label for="travelFeeInput">
+            <span>🚗 Extra-Store Travel / Fuel Fee:</span>
+            <span style="font-weight: normal; color: var(--text-muted);">Per Extra Store Visited</span>
+          </label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="font-weight: bold; font-size: 0.9rem;">R</span>
+            <input type="number" id="travelFeeInput" value="30" min="0" step="5" style="width: 100px;" onchange="runOptimizer()" />
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Accounts for fuel or delivery costs when splitting stores.</small>
+          </div>
+        </div>
+
         <button onclick="runOptimizer()" style="width: 100%; padding: 0.8rem; font-size: 0.95rem;">⚡ Run Smart Basket Optimiser</button>
       </div>
 
       <div class="card" style="margin-top: 1.5rem;">
         <h2>3. Smart Shopping Basket Optimiser</h2>
         <div id="resultsContainer">
-          <p style="color: var(--text-muted); font-size: 0.85rem;">Add products and click Optimiser to view detailed store price comparisons.</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Add products and click Optimiser to view practical store comparisons.</p>
         </div>
       </div>
     </div>
@@ -459,6 +464,7 @@
       `).join("");
     }
 
+    // Practical-Cost Optimizer Implementation
     function runOptimizer() {
       const resultsContainer = document.getElementById("resultsContainer");
       if (userBasket.length === 0) {
@@ -466,9 +472,11 @@
         return;
       }
 
+      const travelFeePerExtraStore = parseFloat(document.getElementById("travelFeeInput").value) || 0;
       const storeTotals = { "Store 1": 0, "Store 2": 0, "Store 3": 0 };
-      let splitTotal = 0;
+      let pureSplitProductsTotal = 0;
       const splitBreakdown = [];
+      const storesVisitedSet = new Set();
 
       userBasket.forEach(item => {
         const qty = item.quantity;
@@ -485,13 +493,19 @@
           }
         }
         
-        splitTotal += lowestPrice * qty;
+        pureSplitProductsTotal += lowestPrice * qty;
+        storesVisitedSet.add(lowestStore);
         splitBreakdown.push({ name: item.name, brand: item.brand, qty, store: lowestStore, total: lowestPrice * qty });
       });
 
+      // Practical Multi-Store Calculation: Extra stores visited beyond the primary/first store incur travel fees
+      const extraStoresCount = Math.max(0, storesVisitedSet.size - 1);
+      const totalTravelFee = extraStoresCount * travelFeePerExtraStore;
+      const practicalMultiStoreTotal = pureSplitProductsTotal + totalTravelFee;
+
       const sortedStores = Object.entries(storeTotals).sort((a, b) => a[1] - b[1]);
       const bestSingleStore = sortedStores[0];
-      const savings = bestSingleStore[1] - splitTotal;
+      const savings = bestSingleStore[1] - practicalMultiStoreTotal;
 
       updateDashboardTotals(bestSingleStore[1], savings);
 
@@ -500,19 +514,21 @@
           <div class="opt-card single">
             <span class="badge">SINGLE-STORE BEST</span>
             <div class="price">R${bestSingleStore[1].toFixed(2)}</div>
-            <p>Buy all from <strong>${bestSingleStore[0]}</strong></p>
+            <p>Buy all from <strong>${bestSingleStore[0]}</strong> (0 extra trips)</p>
           </div>
 
           <div class="opt-card multi">
-            <span class="badge">MULTI-STORE OPTIMIZED</span>
-            <div class="price">R${splitTotal.toFixed(2)}</div>
-            <p>Split across cheapest stores</p>
+            <span class="badge">PRACTICAL MULTI-STORE</span>
+            <div class="price">R${practicalMultiStoreTotal.toFixed(2)}</div>
+            <p>Items: R${pureSplitProductsTotal.toFixed(2)} + Travel (${extraStoresCount} extra store${extraStoresCount === 1 ? '' : 's'} @ R${travelFeePerExtraStore})</p>
           </div>
 
           <div class="opt-card budget">
-            <span class="badge">BUDGET OPTION</span>
-            <div class="price">R${splitTotal.toFixed(2)}</div>
-            <p>Status: <strong>Within Limit</strong></p>
+            <span class="badge">RECOMMENDATION</span>
+            <div class="price" style="font-size: 1rem; color: ${savings > 0 ? 'var(--accent-green)' : 'var(--alert-text)'};">
+              ${savings > 0 ? `Save R${savings.toFixed(2)} by splitting` : 'Stick to Single Store'}
+            </div>
+            <p>${savings > 0 ? 'Multi-store beats travel fees' : 'Travel costs outweigh price savings'}</p>
           </div>
         </div>
 
@@ -538,7 +554,7 @@
           </table>
         </div>
 
-        <h3 style="margin-top: 1.25rem; font-size: 0.95rem; color: var(--navy);">Multi-Store Split Recommendation</h3>
+        <h3 style="margin-top: 1.25rem; font-size: 0.95rem; color: var(--navy);">Multi-Store Split Recommendation (${storesVisitedSet.size} Stores Visited)</h3>
         <div class="table-responsive">
           <table class="comparison-table">
             <thead>
@@ -558,6 +574,14 @@
                   <td>R${item.total.toFixed(2)}</td>
                 </tr>
               `).join('')}
+              <tr style="background: #f8fafc; font-weight: bold;">
+                <td colspan="3" style="text-align: right;">Travel / Delivery Fees Added:</td>
+                <td>+R${totalTravelFee.toFixed(2)}</td>
+              </tr>
+              <tr style="background: #f0fdf4; font-weight: bold;">
+                <td colspan="3" style="text-align: right;">Final Practical Total:</td>
+                <td style="color: var(--accent-green);">R${practicalMultiStoreTotal.toFixed(2)}</td>
+              </tr>
             </tbody>
           </table>
         </div>
